@@ -16,6 +16,14 @@ const idParamSchema = z.object({
   id: z.string().uuid(),
 });
 
+const cacheMiddleware = (req, res, next) => {
+  res.setHeader(
+    "Cache-Control",
+    "public, max-age=7200, s-maxage=7200, stale-while-revalidate=600"
+  );
+  next();
+};
+
 router.post("/", async (req, res) => {
   try {
     const validation = createExperienceSchema.safeParse(req.body);
@@ -50,7 +58,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", cacheMiddleware, async (req, res) => {
   try {
     const query = querySchema.safeParse(req.query);
     const options = query.success
@@ -72,7 +80,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", cacheMiddleware, async (req, res) => {
   try {
     const validation = idParamSchema.safeParse(req.params);
 
