@@ -16,16 +16,16 @@ const idParamSchema = z.object({
   id: z.string().uuid(),
 });
 
-const cacheMiddleware = (req, res, next) => {
-  res.setHeader("Cache-Control", "public, max-age=7200");
-  res.setHeader("CDN-Cache-Control", "public, s-maxage=7200");
-  res.setHeader("Vercel-CDN-Cache-Control", "public, s-maxage=7200");
-  res.removeHeader("Pragma");
-  res.removeHeader("Expires");
-  next();
-};
-
 router.post("/", async (req, res) => {
+  // Honeypot check
+  if (req.body.website) {
+    // Silent rejection or fake success to confuse bots
+    return res.status(400).json({
+      success: false,
+      error: "Spam detected",
+    });
+  }
+
   try {
     const validation = createExperienceSchema.safeParse(req.body);
 
@@ -59,7 +59,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", cacheMiddleware, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const query = querySchema.safeParse(req.query);
     const options = query.success
@@ -81,7 +81,7 @@ router.get("/", cacheMiddleware, async (req, res) => {
   }
 });
 
-router.get("/:id", cacheMiddleware, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const validation = idParamSchema.safeParse(req.params);
 
