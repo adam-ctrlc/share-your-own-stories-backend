@@ -17,10 +17,11 @@ const idParamSchema = z.object({
 });
 
 const cacheMiddleware = (req, res, next) => {
-  res.setHeader(
-    "Cache-Control",
-    "public, max-age=7200, s-maxage=7200, stale-while-revalidate=600"
-  );
+  res.setHeader("Cache-Control", "public, max-age=7200");
+  res.setHeader("CDN-Cache-Control", "public, s-maxage=7200");
+  res.setHeader("Vercel-CDN-Cache-Control", "public, s-maxage=7200");
+  res.removeHeader("Pragma");
+  res.removeHeader("Expires");
   next();
 };
 
