@@ -1,0 +1,28 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Experience {
+  id        String   @id @default(uuid())
+  content   String   @db.Text 
+  createdAt DateTime @default(now())
+  ipHash    String?  
+  views     Int      @default(0) 
+  viewLogs  ViewLog[]
+}
+
+model ViewLog {
+  id           String     @id @default(uuid())
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id])
+  ipHash       String
+  createdAt    DateTime   @default(now())
+  @@unique([experienceId, ipHash]) 
+}
+
