@@ -8,6 +8,8 @@ import {
   createExperienceSchema,
   querySchema,
 } from "../../common/utils/schemas.js";
+import { noCache } from "../../common/middleware/noCache.js";
+import { antispam } from "../../common/middleware/antispam.js";
 import { z } from "zod";
 
 const router = Router();
@@ -16,16 +18,7 @@ const idParamSchema = z.object({
   id: z.string().uuid(),
 });
 
-router.post("/", async (req, res) => {
-  // Honeypot check
-  if (req.body.website) {
-    // Silent rejection or fake success to confuse bots
-    return res.status(400).json({
-      success: false,
-      error: "Spam detected",
-    });
-  }
-
+router.post("/", antispam, async (req, res) => {
   try {
     const validation = createExperienceSchema.safeParse(req.body);
 
@@ -39,7 +32,7 @@ router.post("/", async (req, res) => {
     const ip =
       req.ip ||
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown";
 
     const result = await createExperience(validation.data.content, ip);
@@ -59,7 +52,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", noCache, async (req, res) => {
   try {
     const query = querySchema.safeParse(req.query);
     const options = query.success
@@ -81,7 +74,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", noCache, async (req, res) => {
   try {
     const validation = idParamSchema.safeParse(req.params);
 
@@ -95,7 +88,7 @@ router.get("/:id", async (req, res) => {
     const ip =
       req.ip ||
       req.headers["x-forwarded-for"] ||
-      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
       "unknown";
 
     const result = await getExperienceById(validation.data.id, ip);
